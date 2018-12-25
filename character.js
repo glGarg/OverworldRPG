@@ -1,4 +1,4 @@
-var dirChangeTimeout = 1200; // ms
+var dirChangeTimeout = 2000; // ms
 var HumanSprites = {};
 var MonsterSprites = {};
 function getMonsterSprites(id)
@@ -6,21 +6,21 @@ function getMonsterSprites(id)
     // bound check id
     if(!MonsterSprites.hasOwnProperty(`${id}`))
     {
-        MonsterSprites[`${id}`] = [new Sprite(`overworld/right/${id}.png`),
-                                   new Sprite(`overworld/right/frame2/${id}.png`),
-                                   new Sprite(`overworld/up/${id}.png`),
-                                   new Sprite(`overworld/up/frame2/${id}.png`),
-                                   new Sprite(`overworld/left/${id}.png`),
-                                   new Sprite(`overworld/left/frame2/${id}.png`),
-                                   new Sprite(`overworld/down/${id}.png`),
-                                   new Sprite(`overworld/down/frame2/${id}.png`)];
+        MonsterSprites[`${id}`] = [new Sprite(`overworld/right/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/right/frame2/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/up/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/up/frame2/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/left/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/left/frame2/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/down/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/down/frame2/${id}.png`, 1, 1)];
     }
     else
     {
         console.log(`character ${id} already loaded.`);
     }
 
-    return MonsterSprites[`${id}`]
+    return MonsterSprites[`${id}`];
 }
 
 function getHumanSprites(id)
@@ -38,32 +38,85 @@ function getHumanSprites(id)
     return HumanSprites[`${id}`];
 }
 
-function Character(x, y, direction, speed)
+function Character(x, y, direction, invSpeed, characterWidth, characterHeight, map)
 {
-    this.x = x;
-    this.y = y;
-    this.moving = false;
+    this.posX = x;
+    this.posY = y;
+    this.toPosX = x;
+    this.toPosY = y;
+    this.fromPosX = x;
+    this.fromPosY = y;
+    this.dirFacing = direction;
+    this.stepSize = 6;
+    this.characterWidth = characterWidth;
+    this.characterHeight = characterHeight;
+
+    this.timePerTile = invSpeed;
+    this.movementDone = true;
+    this.timeMoved = 0;
+
     this.animator = null;
-    this.direction = direction;
-    this.speed = speed;
+    this.map = map;
 }
 
-Character.prototype.updatePos = function()
+Character.prototype.move = function(time)
 {
-    this.x = (this.x + this.speed*Math.cos(this.angle)) % Context.width;
-    this.y = (this.y - this.speed*Math.sin(this.angle)) % Context.height;
+    // delay
+    var tilesToBeCovered = Math.sqrt(Math.pow(this.toPosX - this.fromPosX, 2) + Math.pow(this.toPosY - this.fromPosY, 2)) / this.map.baseTileWidth;
+    var timeNeeded = tilesToBeCovered * this.timePerTile;
+    if((time - this.timeMoved) >= timeNeeded)
+    {
+        this.posX = this.fromPosX = this.toPosX;
+        this.posY = this.fromPosY = this.toPosY;
+        this.movementDone = true;
+        return true;
+    }
+    else
+    {
+        var newPosX = this.fromPosX;
+        var newPosY = this.fromPosY;
+        if(this.toPosX != this.fromPosX)
+        {
+            var speedX = (this.toPosX - this.fromPosX) / timeNeeded * (time - this.timeMoved);
+            newPosX += speedX;
+        }
+
+        if(this.toPosY != this.fromPosY)
+        {
+            var speedY = (this.toPosY - this.fromPosY) / timeNeeded * (time - this.timeMoved);
+            newPosY += speedY;
+        }
+
+        // detect obstacles along the path
+        if(!this.map.isWalkable(newPosX, newPosY))
+        {
+            // obstacle detected, stop moving
+            this.fromPosX = this.toPosX = this.posX;
+            this.fromPosY = this.toPosY = this.posY;
+            this.movementDone = true;
+            return true;
+        }
+        else
+        {
+            this.posX = newPosX;
+            this.posY = newPosY;
+        }
+
+        return false;
+    }
 }
 
-function Monster(x, y, direction, id, speed)
+function Monster(x, y, direction, id, invSpeed, width, height, map)
 {
-    Character.call(this, x, y, direction, speed);
+    Character.call(this, x, y, direction, invSpeed, width, height, map);
     
     this.id = id;
     this.sprites = getMonsterSprites(id);
     this.animator = new Animator(5, 2, this.sprites, null);
     
-    this.angle = 3*Math.PI/2;
-    var self = this;
+/*    var self = this;
+    
+    // random intervals of movement
     setInterval(function()
     {
         self.moving = !self.moving;
@@ -71,89 +124,123 @@ function Monster(x, y, direction, id, speed)
         {
             self.chooseRandomDir();
         }
-    }, randint(dirChangeTimeout, dirChangeTimeout + dirChangeTimeout / 4));
+    }, randint(dirChangeTimeout, dirChangeTimeout + dirChangeTimeout / 4));*/
 }
 
 Monster.prototype = Object.create(Character.prototype);
 Monster.prototype.constructor = Monster;
-Monster.prototype.chooseRandomDir = function()
+/*Monster.prototype.chooseRandomDir = function()
 {
     this.angle = rand(0, 2 * Math.PI);
     var piOverTwo = Math.PI / 2;
     var directionRoundedDown = Math.floor(this.angle / piOverTwo);
     var directionFixup = Math.round((this.angle % piOverTwo) / piOverTwo);
     this.direction = (directionFixup + directionRoundedDown) % 4;
-}
+}*/
 
-Monster.prototype.draw = function()
+Monster.prototype.update = function(time)
 {
-    if(this.moving)
+    if(this.movementDone)
     {
-        this.updatePos();
+        // assign new tilefrom and to
+//        this.x = (this.x + this.speed*Math.cos(this.angle)) % Context.width;
+//        this.y = (this.y - this.speed*Math.sin(this.angle)) % Context.height;
     }
-
-    this.animator.draw(this.x, this.y, [this.direction * 2, this.direction * 2 + 1]);
 }
 
-function Human(x, y, direction, id, speed)
+Monster.prototype.drawAt = function(screenX, screenY)
 {
-    Character.call(this, x, y, direction, speed);
-    
+    this.animator.draw(screenX, screenY, [this.dirFacing * 2, this.dirFacing * 2 + 1]);
+}
+
+function Human(x, y, direction, id, speed, width, height, map)
+{
+    Character.call(this, x, y, direction, speed, width, height, map);
     this.id = id;
-    
     this.spriteSheet = getHumanSprites(id);
     this.animator = new Animator(5, 4, null, this.spriteSheet)
-    
     this.dirToSpriteSheetRow = [2, 3, 1, 0];
-    this.angle = 3*Math.PI/2;
     this.controller = new KeyboardController();
 }
 
 Human.prototype = Object.create(Character.prototype);
 Human.prototype.constructor = Human;
-Human.prototype.updateAngle = function()
+Human.prototype.update = function(time)
 {
-    if(!this.controller.anyKeyPressed())
+    if(this.move(time))
     {
-        this.moving = false;
-        return false;
-    }
+        // check for new movement
+        if(!this.controller.anyKeyPressed())
+        {
+            return;
+        }
 
-    if(this.controller.getKeyPressed.up)
-    {
-        this.direction = 1;
-        this.angle = Math.PI / 2;
-    }
-    else if(this.controller.getKeyPressed.down)
-    {
-        this.direction = 3;
-        this.angle = 3 * Math.PI / 2;
-    }
-    else if(this.controller.getKeyPressed.left)
-    {
-        this.direction = 2;
-        this.angle = Math.PI;
-    }
-    else if(this.controller.getKeyPressed.right)
-    {
-        this.direction = 0;
-        this.angle = 0;
-    }
+        if(this.controller.getKeyPressed.up)
+        {
+            this.dirFacing = 1;
+            if(this.fromPosY <= this.stepSize)
+            {
+               return;
+            }
 
-    this.moving = true;
-    this.updatePos();
-    return true;
+            this.toPosY -= this.stepSize;
+        }
+        else if(this.controller.getKeyPressed.down)
+        {
+            this.dirFacing = 3;
+            if(this.fromPosY >= this.map.baseHeight * this.map.baseTileHeight - this.stepSize)
+            {
+                return;
+            }
+
+            this.toPosY += this.stepSize;
+        }
+        else if(this.controller.getKeyPressed.left)
+        {
+            this.dirFacing = 2;
+            if(this.fromPosX <= this.stepSize)
+            {
+                return;
+            }
+
+            this.toPosX -= this.stepSize;
+        }
+        else if(this.controller.getKeyPressed.right)
+        {
+            this.dirFacing = 0;
+            if(this.fromPosX >= this.map.baseWidth * this.map.baseTileWidth - this.stepSize)
+            {
+                return;
+            }
+            
+            this.toPosX += this.stepSize;
+        }
+
+        // don't move if within two steps of a wall
+        // may need to make them specific to each direction later to make it look right
+        var collisionThresholdX = 2 * this.stepSize * Math.sign(this.toPosX - this.fromPosX);
+        var collisionThresholdY = 2 * this.stepSize * Math.sign(this.toPosY - this.fromPosY);
+        if(this.map.isWalkable(collisionThresholdX + this.toPosX, collisionThresholdY + this.toPosY))
+        {
+            this.movementDone = false;
+            this.timeMoved = time;
+        }
+        else
+        {
+            this.toPosX = this.fromPosX;
+            this.toPosY = this.fromPosY;
+        }
+    }
 }
 
-Human.prototype.draw = function()
+Human.prototype.drawAt = function(screenX, screenY)
 {
-    this.updateAngle();
     var spritesAlongWidth = 4;
-    var spriteRow = this.dirToSpriteSheetRow[this.direction];
+    var spriteRow = this.dirToSpriteSheetRow[this.dirFacing];
     var sequence = new Array();
     for(var i = 0; i < spritesAlongWidth; ++i)
     {
-        if(this.moving)
+        if(!this.movementDone)
         {
             sequence.push(spriteRow * spritesAlongWidth + i);
         }
@@ -162,6 +249,7 @@ Human.prototype.draw = function()
             sequence.push(spriteRow * spritesAlongWidth);
         }
     }
-    
-    this.animator.drawFromSpritesheet(this.x, this.y, sequence);
+
+    // center out the player sprite to its bottom edge
+    this.animator.drawFromSpritesheet(screenX - this.characterWidth/2, screenY - this.characterHeight, this.characterWidth, this.characterHeight, sequence);
 }

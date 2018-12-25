@@ -18,7 +18,7 @@ function Animator(drawDelay, frameCount, sprites, spritesheet)
         this.sprites[sequence[this.frame]].draw(x, y);
     }
 
-    this.drawFromSpritesheet = function(x, y, sequence)
+    this.drawFromSpritesheet = function(x, y, width, height, sequence)
     {
         if(this.drawDelayCount++ == this.drawDelay)
         {
@@ -26,6 +26,6 @@ function Animator(drawDelay, frameCount, sprites, spritesheet)
             this.drawDelayCount = 0;
         }
 
-        this.spritesheet.drawIndexedSprite(x, y, sequence[this.frame]);
+        this.spritesheet.drawIndexedSprite(x, y, width, height, sequence[this.frame]);
     }
 }
