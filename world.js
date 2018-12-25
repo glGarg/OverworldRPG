@@ -1,6 +1,6 @@
 var TileSprites = {};
 
-// replace this with one tileset with all world tiles
+// replaced with one tileset containing all kinds of tiles
 function getTileSprite(material)
 {
     // animate water when we start using tileset
@@ -12,36 +12,36 @@ function getTileSprite(material)
     return TileSprites[`${material}`];
 }
 
-function Map(baseWidth, baseHeight, baseTileWidth, baseTileHeight, topTileWidth, topTileHeight)
+function Map(baseWidth, baseHeight, baseTileWidth, baseTileHeight, tileSetSrc)
 {
+    this.frame = 0;
+    this.frameTicker = 0;
     this.baseWidth = baseWidth;
     this.baseHeight = baseHeight;
     this.baseTileWidth = baseTileWidth;
     this.baseTileHeight = baseTileHeight;
-    this.topTileWidth = topTileWidth;
-    this.topTileHeight = topTileHeight;
-    
+    this.tileSet = new TileSet(tileSetSrc);
     // maps will later be procedurally generated
     this.baseLayer = [
-        0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 2, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 2, 0,
-        0, 2, 3, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 2, 0,
-        0, 2, 3, 1, 4, 4, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 0,
-        0, 2, 3, 1, 1, 4, 4, 1, 2, 3, 3, 2, 1, 1, 2, 1, 0, 0, 0, 0,
-        0, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 0,
+        2, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 2, 4, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 2, 0,
+        0, 2, 7, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 2, 0,
+        0, 2, 7, 1, 4, 4, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 0,
+        0, 2, 7, 1, 1, 4, 4, 1, 2, 7, 7, 2, 1, 1, 2, 1, 0, 0, 0, 0,
+        0, 2, 2, 2, 2, 2, 2, 2, 2, 7, 7, 2, 2, 2, 2, 1, 1, 1, 1, 0,
         0, 1, 1, 1, 1, 2, 4, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 0,
         0, 1, 1, 1, 1, 2, 4, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 0,
         0, 1, 1, 1, 1, 2, 4, 4, 4, 4, 4, 1, 1, 1, 2, 2, 2, 2, 1, 0,
-        0, 1, 1, 1, 1, 2, 3, 2, 1, 1, 4, 1, 1, 1, 1, 3, 3, 2, 1, 0,
-        0, 1, 2, 2, 2, 2, 1, 2, 1, 1, 4, 1, 1, 1, 1, 1, 3, 2, 1, 0,
-        0, 1, 2, 3, 3, 2, 1, 2, 1, 1, 4, 4, 4, 4, 4, 4, 4, 2, 4, 4,
-        0, 1, 2, 3, 3, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 0,
-        0, 1, 2, 3, 4, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 1, 2, 1, 0,
-        0, 3, 2, 3, 4, 4, 1, 2, 2, 2, 2, 2, 2, 2, 1, 0, 1, 2, 1, 0,
-        0, 3, 2, 3, 4, 4, 3, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 2, 3, 0,
-        0, 3, 2, 3, 4, 1, 3, 2, 1, 3, 1, 1, 1, 2, 1, 1, 1, 2, 3, 0,
-        0, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 1, 1, 2, 2, 2, 2, 2, 3, 0,
-        0, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 4, 0,
+        0, 1, 1, 1, 1, 2, 7, 2, 1, 1, 4, 1, 1, 1, 1, 7, 7, 2, 1, 0,
+        0, 1, 2, 2, 2, 2, 1, 2, 1, 1, 4, 1, 1, 1, 1, 1, 7, 2, 1, 0,
+        0, 1, 2, 7, 7, 2, 1, 2, 1, 1, 4, 4, 4, 4, 4, 4, 4, 2, 4, 4,
+        0, 1, 2, 7, 7, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 0,
+        0, 1, 2, 7, 4, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 1, 2, 1, 0,
+        0, 7, 2, 7, 4, 4, 1, 2, 2, 2, 2, 2, 2, 2, 1, 0, 1, 2, 1, 0,
+        0, 7, 2, 7, 4, 4, 7, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 2, 7, 0,
+        0, 7, 2, 7, 4, 1, 7, 2, 1, 7, 1, 1, 1, 2, 1, 1, 1, 2, 7, 0,
+        0, 1, 2, 2, 2, 2, 2, 2, 7, 7, 7, 1, 1, 2, 2, 2, 2, 2, 7, 0,
+        0, 1, 1, 1, 1, 1, 1, 7, 7, 7, 7, 7, 1, 1, 1, 1, 1, 1, 4, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     ];
 
@@ -51,7 +51,7 @@ function Map(baseWidth, baseHeight, baseTileWidth, baseTileHeight, topTileWidth,
         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
         6, 6, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+        6, 6, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
         6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
@@ -102,13 +102,14 @@ function Map(baseWidth, baseHeight, baseTileWidth, baseTileHeight, topTileWidth,
     //       add events for special tiles such as doors, map exits
     var tileTypes =
     {
-        0: { mat: "brick", type: tileType.obstacle, frames: [] },
-        1: { mat: "grass", type: tileType.walkable, frames: [] },
-        2: { mat: "land",  type: tileType.walkable, frames: [] },
-        3: { mat: "stone", type: tileType.obstacle, frames: [] },
-        4: { mat: "water", type: tileType.obstacle, frames: [] },
-        5: { mat: "tree",  type: tileType.obstacle, frames: [] },
-        6: { mat: "air",   type: tileType.walkable, frames: [] }
+        0: { mat: "stone",    type: tileType.obstacle, frames: 1,  x: 1215, y: 639,  width: 97,  height: 97  },
+        1: { mat: "grass",    type: tileType.walkable, frames: 1,  x: 32,   y: 0,    width: 32,  height: 32  },
+        2: { mat: "land",     type: tileType.walkable, frames: 1,  x: 320,  y: 0,    width: 64,  height: 64  },
+        3: { mat: "stone",    type: tileType.obstacle, frames: 1,  x: 1133, y: 11,   width: 69,  height: 69  },
+        4: { mat: "water",    type: tileType.obstacle, frames: 15, x: 160,  y: 1728, width: 32,  height: 32  },
+        5: { mat: "tree",     type: tileType.obstacle, frames: 1,  x: 704,  y: 160,  width: 32,  height: 32  },
+        6: { mat: "air",      type: tileType.walkable, frames: 1,  x: NaN,  y: NaN,  width: NaN, height: NaN },
+        7: { mat: "pavement", type: tileType.walkable, frames: 1,  x: 1215, y: 0,    width: 97,  height: 97  },
     };
 
     this.isWalkable = function(x, y)
@@ -128,18 +129,27 @@ function Map(baseWidth, baseHeight, baseTileWidth, baseTileHeight, topTileWidth,
             for(var y = startTileY; y < endTileY; ++y)
             {
                 var tileType = tileTypes[layer[xytoi(x, y, layerWidth)]];
-                if(tileType.mat == "air")
+                if(tileType == undefined || tileType.mat == "air")
                 {
                     continue;
                 }
 
-                getTileSprite(tileType.mat).draw(startPosX + (x - startTileX) * layerTileWidth, startPosY + (y - startTileY) * layerTileHeight, layerTileWidth, layerTileHeight);
+                var frameOffset = this.frame % tileType.frames * tileType.width;
+                this.tileSet.drawTileWithCoords(tileType.x + frameOffset, tileType.y, tileType.width, tileType.height,
+                                                startPosX + (x - startTileX) * layerTileWidth, startPosY + (y - startTileY) * layerTileHeight,
+                                                layerTileWidth, layerTileHeight);
             }
         }
     }
 
+    // TODO: draw some parts of tiles after characters are drawn so that they appear to be underneath them
+    //       need at least one more overhead layer
     this.draw = function(startTileX, startTileY, endTileX, endTileY, startPosX, startPosY)
     {
+        // slow things down
+        this.frameTicker = (this.frameTicker + 1) % 100;
+        this.frame = (this.frame + !(this.frameTicker % 4) * 1) % 100;
+
         // draw base layer
         this.drawLayer(this.baseLayer, this.baseWidth, this.baseHeight, this.baseTileWidth, this.baseTileHeight,
                        startTileX, startTileY, endTileX, endTileY, startPosX, startPosY);

@@ -150,7 +150,7 @@ Monster.prototype.update = function(time)
 
 Monster.prototype.drawAt = function(screenX, screenY)
 {
-    this.animator.draw(screenX, screenY, [this.dirFacing * 2, this.dirFacing * 2 + 1]);
+    this.animator.draw(screenX, screenY, this.characterWidth, this.characterHeight, [this.dirFacing * 2, this.dirFacing * 2 + 1]);
 }
 
 function Human(x, y, direction, id, speed, width, height, map)

@@ -24,6 +24,7 @@ function Viewport(screenWidth, screenHeight, mapWidth, mapHeight, tileWidth, til
         var tilesOnMap = [Math.floor(this.mapWidth / this.tileWidth),
                           Math.floor(this.mapHeight / this.tileHeight)];
 
+        // currently doesn't handle the case where map is smaller than the screen
         if(playerTile[0] < Math.ceil(tilesOnScreen[0] / 2 + 1))
         {
             this.startTileX = 0;

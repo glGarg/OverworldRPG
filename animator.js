@@ -7,7 +7,7 @@ function Animator(drawDelay, frameCount, sprites, spritesheet)
     this.sprites = sprites;
     this.spritesheet = spritesheet;
 
-    this.draw = function(x, y, sequence)
+    this.draw = function(x, y, width, height, sequence)
     {
         if(this.drawDelayCount++ == this.drawDelay)
         {
@@ -15,7 +15,7 @@ function Animator(drawDelay, frameCount, sprites, spritesheet)
             this.drawDelayCount = 0;
         }
 
-        this.sprites[sequence[this.frame]].draw(x, y);
+        this.sprites[sequence[this.frame]].draw(x, y, width, height);
     }
 
     this.drawFromSpritesheet = function(x, y, width, height, sequence)
