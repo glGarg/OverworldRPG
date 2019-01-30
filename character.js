@@ -38,10 +38,11 @@ function getHumanSprites(id)
     return HumanSprites[`${id}`];
 }
 
-function Character(x, y, direction, invSpeed, characterWidth, characterHeight, map)
+function Character(x, y, z, direction, invSpeed, characterWidth, characterHeight, map)
 {
     this.posX = x;
     this.posY = y;
+    this.z = z;
     this.toPosX = x;
     this.toPosY = y;
     this.fromPosX = x;
@@ -57,12 +58,18 @@ function Character(x, y, direction, invSpeed, characterWidth, characterHeight, m
 
     this.animator = null;
     this.map = map;
+    this.renderer = renderer;
 }
 
 Character.prototype.move = function(time)
 {
+    if(this.toPosX == this.fromPosX && this.toPosY == this.fromPosY)
+    {
+        return true;
+    }
+
     // delay
-    var tilesToBeCovered = Math.sqrt(Math.pow(this.toPosX - this.fromPosX, 2) + Math.pow(this.toPosY - this.fromPosY, 2)) / this.map.baseTileWidth;
+    var tilesToBeCovered = Math.sqrt(Math.pow(this.toPosX - this.fromPosX, 2) + Math.pow(this.toPosY - this.fromPosY, 2)) / this.map.tileWidth;
     var timeNeeded = tilesToBeCovered * this.timePerTile;
     if((time - this.timeMoved) >= timeNeeded)
     {
@@ -106,13 +113,13 @@ Character.prototype.move = function(time)
     }
 }
 
-function Monster(x, y, direction, id, invSpeed, width, height, map)
+function Monster(x, y, z, direction, id, invSpeed, width, height, map, renderer)
 {
-    Character.call(this, x, y, direction, invSpeed, width, height, map);
+    Character.call(this, x, y, z, direction, invSpeed, width, height, map);
     
     this.id = id;
     this.sprites = getMonsterSprites(id);
-    this.animator = new Animator(5, 2, this.sprites, null);
+    this.animator = new Animator(5, 2, this.sprites, null, renderer);
     
 /*    var self = this;
     
@@ -150,15 +157,15 @@ Monster.prototype.update = function(time)
 
 Monster.prototype.drawAt = function(screenX, screenY)
 {
-    this.animator.draw(screenX, screenY, this.characterWidth, this.characterHeight, [this.dirFacing * 2, this.dirFacing * 2 + 1]);
+    this.animator.draw(screenX, screenY, this.z, this.characterWidth, this.characterHeight, 0, [this.dirFacing * 2, this.dirFacing * 2 + 1]);
 }
 
-function Human(x, y, direction, id, speed, width, height, map)
+function Human(x, y, z, direction, id, speed, width, height, map, renderer)
 {
-    Character.call(this, x, y, direction, speed, width, height, map);
+    Character.call(this, x, y, z, direction, speed, width, height, map);
     this.id = id;
     this.spriteSheet = getHumanSprites(id);
-    this.animator = new Animator(5, 4, null, this.spriteSheet)
+    this.animator = new Animator(5, 4, null, this.spriteSheet, renderer)
     this.dirToSpriteSheetRow = [2, 3, 1, 0];
     this.controller = new KeyboardController();
 }
@@ -188,7 +195,7 @@ Human.prototype.update = function(time)
         else if(this.controller.getKeyPressed.down)
         {
             this.dirFacing = 3;
-            if(this.fromPosY >= this.map.baseHeight * this.map.baseTileHeight - this.stepSize)
+            if(this.fromPosY >= this.map.height * this.map.tileheight - this.stepSize)
             {
                 return;
             }
@@ -208,7 +215,7 @@ Human.prototype.update = function(time)
         else if(this.controller.getKeyPressed.right)
         {
             this.dirFacing = 0;
-            if(this.fromPosX >= this.map.baseWidth * this.map.baseTileWidth - this.stepSize)
+            if(this.fromPosX >= this.map.width * this.map.tileWidth - this.stepSize)
             {
                 return;
             }
@@ -218,8 +225,8 @@ Human.prototype.update = function(time)
 
         // don't move if within two steps of a wall
         // may need to make them specific to each direction later to make it look right
-        var collisionThresholdX = 2 * this.stepSize * Math.sign(this.toPosX - this.fromPosX);
-        var collisionThresholdY = 2 * this.stepSize * Math.sign(this.toPosY - this.fromPosY);
+        var collisionThresholdX = this.stepSize * Math.sign(this.toPosX - this.fromPosX);
+        var collisionThresholdY = this.stepSize * Math.sign(this.toPosY - this.fromPosY);
         if(this.map.isWalkable(collisionThresholdX + this.toPosX, collisionThresholdY + this.toPosY))
         {
             this.movementDone = false;
@@ -251,5 +258,5 @@ Human.prototype.drawAt = function(screenX, screenY)
     }
 
     // center out the player sprite to its bottom edge
-    this.animator.drawFromSpritesheet(screenX - this.characterWidth/2, screenY - this.characterHeight, this.characterWidth, this.characterHeight, sequence);
+    this.animator.drawFromSpritesheet(screenX - this.characterWidth/2, screenY - this.characterHeight, this.z, this.characterWidth, this.characterHeight, 0, sequence);
 }

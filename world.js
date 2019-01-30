@@ -12,290 +12,32 @@ function getTileSprite(material)
     return TileSprites[`${material}`];
 }
 
-function Map(baseWidth, baseHeight, baseTileWidth, baseTileHeight, tileSetSrc)
+function Map(width, height, tileWidth, tileHeight, tileSetSrc, undergrowth, layers, renderer)
 {
     this.frame = 0;
     this.frameTicker = 0;
-    this.baseWidth = baseWidth;
-    this.baseHeight = baseHeight;
-    this.baseTileWidth = baseTileWidth;
-    this.baseTileHeight = baseTileHeight;
+    this.width = width;
+    this.height = height;
+    this.tileWidth = tileWidth;
+    this.tileHeight = tileHeight;
     this.tileSet = new TileSet(tileSetSrc);
-    
-    // maps will later be procedurally generated
-    //TODO: move this out to game and pass map in
-    this.undergrowth = 1;
-    this.baseLayer = [
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-        13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-        13, 6, 6, 6, 6, 13, 6, 6, 13, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 13,
-        13, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 13,
-        13, 6, 6, 6, 6, 13, 6, 6, 13, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 13,
-        13, 6, 6, 6, 6, 13, 6, 6, 13, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 13,
-        13, 13, 13, 13, 13, 13, 6, 6, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-        13, 13, 13, 13, 13, 13, 6, 6, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        13, 13, 13, 13, 13, 13, 13, 13, 13, 6, 6, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-        13, 13, 13, 13, 13, 13, 13, 13, 13, 6, 6, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-        13, 6, 6, 6, 6, 6, 6, 6, 13, 6, 6, 13, 6, 6, 6, 6, 6, 6, 6, 13,
-        13, 6, 6, 6, 6, 6, 6, 6, 13, 6, 6, 13, 6, 6, 6, 6, 6, 6, 6, 13,
-        13, 6, 6, 6, 6, 6, 6, 6, 13, 6, 6, 13, 6, 6, 6, 6, 6, 6, 6, 13,
-        13, 6, 6, 6, 6, 6, 6, 6, 13, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 13,
-        13, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 13, 6, 6, 6, 6, 6, 6, 6, 13,
-        13, 13, 13, 13, 13, 13, 13, 13, 13, 6, 6, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-        13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-    ];
 
-    // dimensions twice as base layer
-    this.baseLayerDecor = [
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 14, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        14, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 14, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 14, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 14, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 14, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6
-    ];
-
-
-    this.overheadLayer = [
-        12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
-        12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
-        12, 6, 6, 6, 6, 12, 6, 6, 12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 12,
-        12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 12,
-        12, 6, 6, 6, 6, 12, 6, 6, 12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 12,
-        12, 6, 6, 6, 6, 12, 6, 6, 12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 12,
-        12, 12, 12, 12, 12, 12, 6, 6, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
-        12, 12, 12, 12, 12, 12, 6, 6, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        12, 12, 12, 12, 12, 12, 12, 12, 12, 6, 6, 12, 12, 12, 12, 12, 12, 12, 12, 12,
-        12, 12, 12, 12, 12, 12, 12, 12, 12, 6, 6, 12, 12, 12, 12, 12, 12, 12, 12, 12,
-        12, 6, 6, 6, 6, 6, 6, 6, 12, 6, 6, 12, 6, 6, 6, 6, 6, 6, 6, 12,
-        12, 6, 6, 6, 6, 6, 6, 6, 12, 6, 6, 12, 6, 6, 6, 6, 6, 6, 6, 12,
-        12, 6, 6, 6, 6, 6, 6, 6, 12, 6, 6, 12, 6, 6, 6, 6, 6, 6, 6, 12,
-        12, 6, 6, 6, 6, 6, 6, 6, 12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 12,
-        12, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 12, 6, 6, 6, 6, 6, 6, 6, 12,
-        12, 12, 12, 12, 12, 12, 12, 12, 12, 6, 6, 12, 12, 12, 12, 12, 12, 12, 12, 12,
-        12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-    ];
-
-    this.overheadLayerDecor = [
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6
-    ];
-    
-    // TODO: add this to map generator; investigate procedural map generation algorithms
-    var tileType =
-    {
-        obstacle : 0,
-        walkable : 1,
-    };
-
-    // TODO: add tileset coords and new tile types
-    //       animate by adding frame tuples
-    //       add events for special tiles such as doors, map exits
-    var tileTypes =
-    {
-        0:  { 
-                mat: "stone",
-                type: tileType.obstacle,
-                frames: 1,
-                x: 1215, y: 639,
-                width: 97, height: 97
-            },
-        1:  {
-                mat: "grass",
-                type: tileType.walkable,
-                frames: 1,
-                x: 32, y: 0, 
-                width: 32, height: 32
-            },
-        2:  {
-                mat: "land",
-                type: tileType.walkable,
-                frames: 1,
-                x: 320, y: 0,
-                width: 64, height: 64
-            },
-        3:  {
-                mat: "stone",
-                type: tileType.obstacle,
-                frames: 1,
-                x: 1133, y: 11,
-                width: 69, height: 69
-            },
-        4:  {
-                mat: "water",
-                type: tileType.obstacle,
-                frames: 15,
-                x: 160, y: 1728,
-                width: 32,  height: 32
-            },
-        5:  {
-                mat: "shrub",
-                type: tileType.obstacle,
-                frames: 1,
-                x: 704, y: 160,
-                width: 32, height: 32
-            },
-        6:  {
-                mat: "air",
-                type: tileType.walkable,
-                frames: 1,
-                x: NaN, y: NaN,
-                width: NaN, height: NaN
-            },
-        7:  {
-                mat: "pavement",
-                type: tileType.walkable,
-                frames: 1,
-                x: 1215, y: 0,
-                width: 97, height: 97
-            },
-        8:  {
-                mat: "plant",
-                type: tileType.walkable,
-                frames: 1,
-                x: 1055, y: 223,
-                width: 32, height: 32
-            },
-        9:  {
-                mat: "coniferousTreeTop",
-                type: tileType.walkable,
-                frames: 1,
-                x: 735, y: 231,
-                width: 32, height: 28
-            },
-        10: {
-                mat: "coniferousTreeBottom",
-                type: tileType.obstacle,
-                frames: 1,
-                x: 735, y: 259,
-                width: 32, height: 28
-            },
-        12: {
-                mat: "regularTreeTop",
-                type: tileType.walkable,
-                frames: 1,
-                x: 639, y: 0,
-                width: 64, height: 64
-            },
-        13: {
-                mat: "regularTreeBottom",
-                type: tileType.obstacle,
-                frames: 1,
-                x: 639, y: 63,
-                width: 64, height: 64
-            },
-        14: {
-                mat: "flower",
-                type: tileType.walkable,
-                frames: 4,
-                x: 640, y: 702,
-                width: 32, height: 32
-            },
-        15: {
-                mat: "spiritFireTop",
-                type: tileType.obstacle,
-                frames: 1,
-                x: 512, y: 642,
-                width: 32, height: 32
-            },
-        16: {
-                mat: "spiritFireBottom",
-                type: tileType.obstacle,
-                frames: 1,
-                x: 512, y: 673,
-                width: 32, height: 32
-            }
-    };
+    this.undergrowth = undergrowth;
+    this.layers = layers;
+    this.renderer = renderer;
 
     this.isWalkable = function(x, y)
     {
-        var baseTile = this.baseLayer[xytoi(Math.floor(x / this.baseTileWidth), Math.floor(y / this.baseTileHeight), this.baseWidth)];
-        var decorTile = this.baseLayerDecor[xytoi(Math.floor(x / (this.baseTileWidth / 2)), Math.floor(y / (this.baseTileHeight / 2)), 2 * this.baseWidth)];
-        return x >= 0 && x < this.baseTileWidth * this.baseWidth &&
-               y >= 0 && y < this.baseTileHeight * this.baseHeight &&
-               (tileTypes[`${baseTile}`].type == tileType.walkable && tileTypes[`${decorTile}`].type == tileType.walkable);
+        var isTileWalkable = true;
+        for(var i = 0; i < this.layers.length; ++i)
+        {
+            var tile = this.layers[i][xytoi(Math.floor(x / this.tileWidth), Math.floor(y / this.tileHeight), this.width)];
+            isTileWalkable &= tileTypes[`${tile}`].type == tileType.walkable;
+        }
+
+        return x >= 0 && x < this.tileWidth * this.width &&
+               y >= 0 && y < this.tileHeight * this.height &&
+               isTileWalkable;
     }
 
     this.drawLayer = function(layer, layerWidth, layerHeight, layerTileWidth, layerTileHeight,
@@ -312,64 +54,69 @@ function Map(baseWidth, baseHeight, baseTileWidth, baseTileHeight, tileSetSrc)
                 }
 
                 var frameOffset = this.frame % tileType.frames * tileType.width;
-                this.tileSet.drawTileWithCoords(tileType.x + frameOffset, tileType.y, tileType.width, tileType.height,
-                                                startPosX + (x - startTileX) * layerTileWidth, startPosY + (y - startTileY) * layerTileHeight,
-                                                layerTileWidth, layerTileHeight);
+                
+                this.renderer.draw(this.tileSet, {
+                    tileSetPosX: tileType.x + frameOffset,
+                    tileSetPosY: tileType.y,
+                    depth: tileType.z,
+                    tileSetWidth: tileType.width,
+                    tileSetHeight: tileType.height,
+                    x: startPosX + (x - startTileX) * layerTileWidth,
+                    y: startPosY + (y - startTileY) * layerTileHeight,
+                    width: layerTileWidth,
+                    height: layerTileHeight,
+                    baseOffset: tileType.baseOffset
+                });
             }
         }
-    }
-
-    this.update = function()
-    {
-        // slow things down
-        this.frameTicker = (this.frameTicker + 1) % 100;
-        this.frame = (this.frame + !(this.frameTicker % 4) * 1) % 100;
     }
 
     this.drawUndergrowth = function(tileTypeId, layerTileWidth, layerTileHeight,
                                     startTileX, startTileY, endTileX, endTileY, startPosX, startPosY)
     {
+        var tileType = tileTypes[tileTypeId];
+        if(tileType == undefined || tileType.mat == "air")
+        {
+            return;
+        }
+
         for(var x = startTileX; x < endTileX; ++x)
         {
             for(var y = startTileY; y < endTileY; ++y)
             {
-                var tileType = tileTypes[tileTypeId];
-                if(tileType == undefined || tileType.mat == "air")
-                {
-                    continue;
-                }
-
                 var frameOffset = this.frame % tileType.frames * tileType.width;
-                this.tileSet.drawTileWithCoords(tileType.x + frameOffset, tileType.y, tileType.width, tileType.height,
-                                                startPosX + (x - startTileX) * layerTileWidth, startPosY + (y - startTileY) * layerTileHeight,
-                                                layerTileWidth, layerTileHeight);
+                this.renderer.draw(this.tileSet, {
+                    tileSetPosX: tileType.x + frameOffset,
+                    tileSetPosY: tileType.y,
+                    depth: tileType.z,
+                    tileSetWidth: tileType.width,
+                    tileSetHeight: tileType.height,
+                    x: startPosX + (x - startTileX) * layerTileWidth,
+                    y: startPosY + (y - startTileY) * layerTileHeight,
+                    width: layerTileWidth,
+                    height: layerTileHeight,
+                    baseOffset: tileType.baseOffset
+                });
             }
         }
     }
     
-    this.drawFloor = function(startTileX, startTileY, endTileX, endTileY, startPosX, startPosY)
+    this.draw = function(startTileX, startTileY, endTileX, endTileY, startPosX, startPosY)
     {
-        // draw base layer
-        this.drawUndergrowth(this.undergrowth, this.baseTileWidth / 2, this.baseTileHeight / 2,
-            2 * startTileX, 2 * startTileY, 2 * endTileX, 2 * endTileY, startPosX, startPosY);
-    }
+        // slow things down
+        this.frameTicker = (this.frameTicker + 1) % 100;
+        if(this.frameTicker % 4 != 0)
+        {
+        //    return;
+        }
 
-    this.drawBottomLayer = function(startTileX, startTileY, endTileX, endTileY, startPosX, startPosY)
-    {
-        this.drawLayer(this.baseLayer, this.baseWidth, this.baseHeight, this.baseTileWidth, this.baseTileHeight,
-                       startTileX, startTileY, endTileX, endTileY, startPosX, startPosY);
-        // draw top layer
-        this.drawLayer(this.baseLayerDecor, 2 * this.baseWidth, 2 * this.baseHeight, this.baseTileWidth / 2, this.baseTileHeight / 2,
-                       2 * startTileX, 2 * startTileY, 2 * endTileX, 2 * endTileY, startPosX, startPosY);
-    }
-
-    this.drawTopLayer = function(startTileX, startTileY, endTileX, endTileY, startPosX, startPosY)
-    {
-        // draw base layer
-        this.drawLayer(this.overheadLayer, this.baseWidth, this.baseHeight, this.baseTileWidth, this.baseTileHeight,
-            startTileX, startTileY, endTileX, endTileY, startPosX, startPosY);
-        // draw top layer
-        this.drawLayer(this.overheadLayerDecor, 2 * this.baseWidth, 2 * this.baseHeight, this.baseTileWidth / 2, this.baseTileHeight / 2,
-            2 * startTileX, 2 * startTileY, 2 * endTileX, 2 * endTileY, startPosX, startPosY);
+        this.frame = (this.frame + !(this.frameTicker % 4) * 1) % 100;
+        this.drawUndergrowth(this.undergrowth, this.tileWidth, this.tileHeight,
+                             startTileX, startTileY, endTileX, endTileY, startPosX, startPosY);
+        for(var i = 0; i < this.layers.length; ++i)
+        {
+            this.drawLayer(this.layers[i], this.width, this.height, this.tileWidth, this.tileHeight,
+                           startTileX, startTileY, endTileX, endTileY, startPosX, startPosY);
+        }
     }
 }

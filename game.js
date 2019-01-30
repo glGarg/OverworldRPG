@@ -1,18 +1,22 @@
 var Context = null;
-var mapWidthTiles = 20;
-var mapHeightTiles = 20;
-var characterHeight = 100;
-var characterWidth = 100
-var baseTileWidth = 68;
-var baseTileHeight = 68;
-var map = new Map(mapWidthTiles, mapHeightTiles, baseTileWidth, baseTileHeight, "overworld/tileset/tileset.png"); // pass in the 2d map later
-var monster1 = new Monster(140, 200, 3, 12, 70, characterWidth, characterHeight, map);
-var monster2 = new Monster(290, 890, 3, 333, 700, characterWidth, characterHeight, map);
-var monster3 = new Monster(850, 1000, 3, 386, 700, characterWidth, characterHeight, map);
-var monster4 = new Monster(220, 250, 3, 252, 70, characterWidth, characterHeight, map);
-var monster5 = new Monster(100, 980, 3, 152, 700, characterWidth, characterHeight, map);
-var monster6 = new Monster(800, 230, 3, 1, 700, characterWidth, characterHeight, map);
-var human = new Human(100, 700, 3, 3, 200, characterWidth, characterHeight, map);
+var mapWidthTiles = 80;
+var mapHeightTiles = 80;
+var characterHeight = 68;
+var characterWidth = 68;
+var baseTileWidth = 34;
+var baseTileHeight = 34;
+//var generator =  new Generator(mapWidthTiles, mapHeightTiles);
+var renderer = new Renderer(3);
+var map = new Map(mapWidthTiles, mapHeightTiles, baseTileWidth, baseTileHeight, "overworld/tileset/tileset.png",
+                  undergrowth, [baseLayerDecor, overheadLayerDecor], renderer); // pass in the 2d map later
+var generator = new Generator(mapWidthTiles, mapHeightTiles);
+var monster1 = new Monster(140, 230, 1, 3, 12, 70, characterWidth, characterHeight, map, renderer);
+var monster2 = new Monster(290, 890, 1, 3, 333, 700, characterWidth, characterHeight, map, renderer);
+var monster3 = new Monster(1050, 1000, 1, 3, 386, 700, characterWidth, characterHeight, map, renderer);
+var monster4 = new Monster(220, 250, 1, 3, 252, 70, characterWidth, characterHeight, map, renderer);
+var monster5 = new Monster(100, 980, 1, 3, 152, 700, characterWidth, characterHeight, map, renderer);
+var monster6 = new Monster(800, 230, 1, 3, 1, 700, characterWidth, characterHeight, map, renderer);
+var human = null;
 var viewport = null;
 var time = 0;
 var prevFrameTime = null;
@@ -27,6 +31,10 @@ $(document).ready(function()
     canvas.height = window.innerHeight - 40;
     viewport = new Viewport(canvas.width, canvas.height, mapWidthTiles * baseTileWidth, mapHeightTiles * baseTileHeight, baseTileWidth, baseTileHeight);
     prevFrameTime = Date.now();
+    generator.createMap();
+    map = new Map(mapWidthTiles, mapHeightTiles, baseTileWidth, baseTileHeight, "overworld/tileset/tileset.png",
+                  undergrowth, [baseLayerDecor, overheadLayerDecor], renderer); // pass in the 2d map later
+    human = new Human(1000, 700, 1, 3, 3, 100, characterWidth, characterHeight, map, renderer);
     draw();
 });
 
@@ -63,14 +71,7 @@ function draw()
         monster5.update(time);
         monster6.update(time);
         viewport.update(human.posX, human.posY);
-        map.update();
-        map.drawFloor(viewport.startTileX, viewport.startTileY,
-            viewport.endTileX, viewport.endTileY,
-            viewport.startOffsetX, viewport.startOffsetY);
-        map.drawBottomLayer(viewport.startTileX, viewport.startTileY,
-                 viewport.endTileX, viewport.endTileY,
-                 viewport.startOffsetX, viewport.startOffsetY);
-        monster1.drawAt(monster1.posX - viewport.startTileX * viewport.tileWidth + viewport.startOffsetX,
+        /*monster1.drawAt(monster1.posX - viewport.startTileX * viewport.tileWidth + viewport.startOffsetX,
                         monster1.posY - viewport.startTileY * viewport.tileHeight + viewport.startOffsetY);
         monster2.drawAt(monster2.posX - viewport.startTileX * viewport.tileWidth + viewport.startOffsetX,
                         monster2.posY - viewport.startTileY * viewport.tileHeight + viewport.startOffsetY);
@@ -82,11 +83,13 @@ function draw()
                         monster5.posY - viewport.startTileY * viewport.tileHeight + viewport.startOffsetY);
         monster6.drawAt(monster6.posX - viewport.startTileX * viewport.tileWidth + viewport.startOffsetX,
                         monster6.posY - viewport.startTileY * viewport.tileHeight + viewport.startOffsetY);
-        console.log(human.posX, human.posY);
+        console.log(human.posX, human.posY);*/
         human.drawAt(human.posX - viewport.startTileX * viewport.tileWidth + viewport.startOffsetX,
                     human.posY - viewport.startTileY * viewport.tileHeight + viewport.startOffsetY);
-        map.drawTopLayer(viewport.startTileX, viewport.startTileY,
-            viewport.endTileX, viewport.endTileY,
-            viewport.startOffsetX, viewport.startOffsetY);
+        map.draw(viewport.startTileX, viewport.startTileY,
+                 viewport.endTileX, viewport.endTileY,
+                 viewport.startOffsetX, viewport.startOffsetY);
+
+        renderer.render();
     }
 }
