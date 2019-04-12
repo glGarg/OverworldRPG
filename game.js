@@ -31,7 +31,7 @@ $(document).ready(function()
     canvas.height = window.innerHeight - 40;
     viewport = new Viewport(canvas.width, canvas.height, mapWidthTiles * baseTileWidth, mapHeightTiles * baseTileHeight, baseTileWidth, baseTileHeight);
     prevFrameTime = Date.now();
-    generator.createMap();
+    //generator.createMap();
     map = new Map(mapWidthTiles, mapHeightTiles, baseTileWidth, baseTileHeight, "overworld/tileset/tileset.png",
                   undergrowth, [baseLayerDecor, overheadLayerDecor], renderer); // pass in the 2d map later
     human = new Human(1000, 700, 1, 3, 3, 100, characterWidth, characterHeight, map, renderer);
