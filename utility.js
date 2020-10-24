@@ -1,7 +1,7 @@
 function itoxy(i, width, height)
 {
     var x = i % width;
-    var y = Math.floor(i / height);
+    var y = Math.floor(i / width);
     return [x, y];
 }
 
