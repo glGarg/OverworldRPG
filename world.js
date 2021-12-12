@@ -103,13 +103,7 @@ function Map(width, height, tileWidth, tileHeight, tileSetSrc, undergrowth, laye
     
     this.draw = function(startTileX, startTileY, endTileX, endTileY, startPosX, startPosY)
     {
-        // slow things down
         this.frameTicker = (this.frameTicker + 1) % 100;
-        if(this.frameTicker % 4 != 0)
-        {
-        //    return;
-        }
-
         this.frame = (this.frame + !(this.frameTicker % 4) * 1) % 100;
         this.drawUndergrowth(this.undergrowth, this.tileWidth, this.tileHeight,
                              startTileX, startTileY, endTileX, endTileY, startPosX, startPosY);

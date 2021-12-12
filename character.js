@@ -1,19 +1,25 @@
 var dirChangeTimeout = 2000; // ms
 var HumanSprites = {};
 var MonsterSprites = {};
-function getMonsterSprites(id)
+function getMonsterSprites(id, isSpecial)
 {
     // bound check id
     if(!MonsterSprites.hasOwnProperty(`${id}`))
     {
-        MonsterSprites[`${id}`] = [new Sprite(`overworld/right/${id}.png`, 1, 1),
-                                   new Sprite(`overworld/right/frame2/${id}.png`, 1, 1),
-                                   new Sprite(`overworld/up/${id}.png`, 1, 1),
-                                   new Sprite(`overworld/up/frame2/${id}.png`, 1, 1),
-                                   new Sprite(`overworld/left/${id}.png`, 1, 1),
-                                   new Sprite(`overworld/left/frame2/${id}.png`, 1, 1),
-                                   new Sprite(`overworld/down/${id}.png`, 1, 1),
-                                   new Sprite(`overworld/down/frame2/${id}.png`, 1, 1)];
+        specialPath = '';
+        if(isSpecial)
+        {
+            specialPath = 'special/';
+        }
+
+        MonsterSprites[`${id}`] = [new Sprite(`overworld/${specialPath}right/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/${specialPath}right/frame2/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/${specialPath}up/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/${specialPath}up/frame2/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/${specialPath}left/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/${specialPath}left/frame2/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/${specialPath}down/${id}.png`, 1, 1),
+                                   new Sprite(`overworld/${specialPath}down/frame2/${id}.png`, 1, 1)];
     }
     else
     {
@@ -21,6 +27,21 @@ function getMonsterSprites(id)
     }
 
     return MonsterSprites[`${id}`];
+}
+
+function getSpecialSprites()
+{
+    // bound check id
+    if(!MonsterSprites.hasOwnProperty('special'))
+    {
+        MonsterSprites[`special`] = new Sprite('overworld/tileset/special.png', 5, 1);
+    }
+    else
+    {
+        console.log(`special sprites already loaded.`);
+    }
+
+    return MonsterSprites['special'];
 }
 
 function getHumanSprites(id)
@@ -117,11 +138,20 @@ function Monster(x, y, z, direction, id, invSpeed, width, height, map, renderer)
 {
     Character.call(this, x, y, z, direction, invSpeed, width, height, map);
     
+    this.isSpecial = rand(0, 1) < 0.001
     this.id = id;
-    this.sprites = getMonsterSprites(id);
+    this.sprites = getMonsterSprites(id, this.isSpecial);
     this.animator = new Animator(5, 2, this.sprites, null, renderer);
-    
-/*    var self = this;
+    if (this.isSpecial)
+    {
+        this.specialSprites = getSpecialSprites();
+        this.specialAnimator = new Animator(10, 5, null, this.specialSprites, renderer);
+    }
+
+    this.angle = rand(0, 2 * Math.PI);
+
+    var self = this;
+    this.speed = 2.5;
     
     // random intervals of movement
     setInterval(function()
@@ -131,33 +161,59 @@ function Monster(x, y, z, direction, id, invSpeed, width, height, map, renderer)
         {
             self.chooseRandomDir();
         }
-    }, randint(dirChangeTimeout, dirChangeTimeout + dirChangeTimeout / 4));*/
+    }, randint(dirChangeTimeout, dirChangeTimeout + dirChangeTimeout / 4));
 }
 
 Monster.prototype = Object.create(Character.prototype);
 Monster.prototype.constructor = Monster;
-/*Monster.prototype.chooseRandomDir = function()
+Monster.prototype.chooseRandomDir = function()
 {
     this.angle = rand(0, 2 * Math.PI);
     var piOverTwo = Math.PI / 2;
     var directionRoundedDown = Math.floor(this.angle / piOverTwo);
     var directionFixup = Math.round((this.angle % piOverTwo) / piOverTwo);
     this.direction = (directionFixup + directionRoundedDown) % 4;
-}*/
+}
 
 Monster.prototype.update = function(time)
 {
-    if(this.movementDone)
+    if(this.move(time))
     {
         // assign new tilefrom and to
-//        this.x = (this.x + this.speed*Math.cos(this.angle)) % Context.width;
-//        this.y = (this.y - this.speed*Math.sin(this.angle)) % Context.height;
+        this.toPosX = Number(this.toPosX + this.speed*Math.cos(this.angle)).toFixed(0) % Context.width;
+        this.toPosY = Number(this.toPosY - this.speed*Math.sin(this.angle)).toFixed(0) % Context.height;
+
+        // don't move if within two steps of a wall
+        // may need to make them specific to each direction later to make it look right
+        var collisionThresholdX = this.stepSize * 2 * Math.sign(this.toPosX - this.fromPosX) + 30;
+        var collisionThresholdY = this.stepSize * 2 * Math.sign(this.toPosY - this.fromPosY) + 60;
+        if(this.map.isWalkable(collisionThresholdX + this.toPosX, collisionThresholdY + this.toPosY))
+        {
+            this.movementDone = false;
+            this.timeMoved = time;
+        }
+        else
+        {
+            this.toPosX = this.fromPosX;
+            this.toPosY = this.fromPosY;
+        }
     }
 }
 
 Monster.prototype.drawAt = function(screenX, screenY)
 {
     this.animator.draw(screenX, screenY, this.z, this.characterWidth, this.characterHeight, 0, [this.dirFacing * 2, this.dirFacing * 2 + 1]);
+    if (this.isSpecial)
+    {
+        var spritesAlongWidth = 5;
+        var sequence = new Array();
+        for(var i = 0; i < spritesAlongWidth; ++i)
+        {
+            sequence.push(i);
+        }
+
+        this.specialAnimator.drawFromSpritesheet(screenX, screenY, this.z, this.characterWidth, this.characterHeight, 1, sequence);
+    }
 }
 
 function Human(x, y, z, direction, id, speed, width, height, map, renderer)
