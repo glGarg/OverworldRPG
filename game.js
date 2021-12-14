@@ -26,14 +26,14 @@ var fps = 30;
 
 $(document).ready(function()
 {
-    Context = new Html('game', screen.width, screen.height);
+    Context = new Html("game", screen.width, screen.height);
     canvas = document.getElementById("game");
     canvas.width = window.innerWidth - 40;
     canvas.height = window.innerHeight - 40;
     viewport = new Viewport(canvas.width, canvas.height, mapWidthTiles * baseTileWidth, mapHeightTiles * baseTileHeight, baseTileWidth, baseTileHeight);
     prevFrameTime = Date.now();
     map = new Map(mapWidthTiles, mapHeightTiles, baseTileWidth, baseTileHeight, "overworld/tileset/tileset.png",
-                  undergrowth, [baseLayerDecor, overheadLayerDecor], renderer); // pass in the 2d map later
+                  undergrowth, [baseLayerDecor, overheadLayerDecor], renderer);
     human = new Human(1000, 700, 1, 3, 4, 100, characterWidth, characterHeight, map, renderer);
     draw();
 });
